@@ -1,0 +1,63 @@
+%%%%%%%%%%%%%%%--------OBJECTIVE----------%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%the objective of this program is to track an activity of a moving red
+%object from the camera input. The features can be analysed more clearly
+%using bounding box and centroid of the red object.
+
+%%%%%%%%%%%%%%%-------HOW to DO THIS?-----%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%This can be done by displaying the red component of the rgb image from
+%the actual rgb video frames and then converting it into binary. The red
+%component is displayed as white colour, rest everything else should be black.
+%After this display a bounding box around the region of interest and also
+%mark its centroid to track the movement of its geometric centre.
+
+
+clc
+close all
+clear all
+%vid = webcam;
+
+vid = videoinput('winvideo');
+set(vid, 'FramesPerTrigger', Inf);
+set(vid, 'ReturnedColorspace', 'rgb')
+vid.FrameGrabInterval = 10;
+
+start(vid)
+%start a while loop for continuous image acquistion
+while(vid.FramesAcquired<=500)
+    %get the video input from the camera
+    data = getsnapshot(vid);
+    %subtract red component from the image to obtain at the output
+    orig_im = imsubtract(data(:,:,1 ), rgb2gray(data)); 
+    %filter out noise using median filter
+    med_im = medfilt2(orig_im, [3 3]); 
+    %convert the rgb image input to binary for ease in processing
+    bin_im = imbinarize(med_im,0.3); 
+    %Discard small white areas which may act as noise later on
+    binmod_im = bwareaopen(bin_im,300); 
+    %label all the areas of interest in white(red object)as 1,2,3...
+    bw = bwlabel(binmod_im, 8);
+    %Display and analyze the poperties of red object region by bounding box and centroid of the red object
+    stats = regionprops(bw, 'BoundingBox', 'Centroid');
+    %display the video as sequential images 
+    imshow(binmod_im) 
+    %start displaying the image properties boundix box and centroid on the
+    %displayed image; the next for loop performs these actions
+    %check matlab help for individual functions such as strcat,rectangle..
+    hold on
+    
+    for object = 1:length(stats)
+        bound = stats(object).BoundingBox;
+        cent = stats(object).Centroid;
+        disp(cent);
+        rectangle('Position',bound,'EdgeColor','g','LineWidth',3)
+        plot(cent(1),cent(2), '-m+')
+            
+        a=text(cent(1)+15,cent(2), strcat('X: ', num2str(round(cent(1))), '    Y: ', num2str(round(cent(2)))));
+        set(a, 'FontName', 'Arial', 'FontWeight', 'bold', 'FontSize', 12, 'Color', 'yellow');
+    end
+    
+    hold off
+end
+
+stop(vid);
+sprintf('%s','End')
