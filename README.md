@@ -1,4 +1,6 @@
-Object-tracking-using-MATLAB
+Colour based object tracking using MATLAB
+
+
 OBJECTIVE-The objective of this program is to track an activity of a moving red
 object from the camera input. The features can be analysed more clearly
 using bounding box and centroid of the red object.
